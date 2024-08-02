@@ -84,6 +84,7 @@ class ConfigHandler:
         self.ES_METAINDEX = self.getConf('elasticsearch', 'metaindex')
         self.API_PREFIXURI = self.getConf('api', 'prefixuri')
         self.API_PROJECTNAME = self.getConf('api', 'projectname')
+        self.API_PORT = self.getConf('api', 'port')
 
 
     
@@ -101,6 +102,7 @@ class ConfigHandler:
         self.setConf('elasticsearch','metaindex','index_analyzer')
         self.setConf('api','prefixuri','/v1/')
         self.setConf('api','projectname','essink')
+        self.setConf('api','port','8000')
         self.writeConfig(filename)
 
     

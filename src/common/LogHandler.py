@@ -6,7 +6,7 @@ from logging.handlers import TimedRotatingFileHandler
 class LogHandler:
     
     def __init__(self,code_path,print_flag):
-        log_path = str(Path(os.path.dirname(code_path)).parent.parent.parent.resolve())+'/log'
+        log_path = str(Path(os.path.dirname(code_path)).parent.parent.resolve())+'/log'
         log_filename = Path(code_path).stem
         self.setLogger(log_path,log_filename,print_flag)
     
