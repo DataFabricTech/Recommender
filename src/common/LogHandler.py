@@ -16,7 +16,7 @@ class LogHandler:
             temp_path = temp_path.parent
             limiter = limiter + 1
 
-        log_path = str(temp_path.resolve())+'/log'
+        log_path = str(temp_path.resolve())+'/logs'
         self.setLogger(log_path,log_filename,print_flag)
 
     def setLoglevel(self):
