@@ -44,7 +44,7 @@ class ConfigHandler:
                 for itemkey in self.conf[section][key].keys():
                     arr.append(itemkey)
         except:
-            print('해당하는 설정 섹션이 존재하지 않습니다')
+            raise('해당하는 설정 섹션이 존재하지 않습니다')
 
         return arr
 
