@@ -91,9 +91,10 @@ class ConfigHandler:
         self.ES_SSHPASSWORD = self.getConf('elasticsearch', 'sshpassword')
         self.ES_SYNONYMLOCALFILEPATH = self.getConf('elasticsearch', 'synonymlocalfilepath')
         self.ES_SYNONYMREMOTEFILEPATH = self.getConf('elasticsearch', 'synonymremotefilepath')
-        self.API_PREFIXURI = self.getConf('api', 'prefixuri')
-        self.API_PROJECTNAME = self.getConf('api', 'projectname')
-        self.API_PORT = self.getConf('api', 'port')
+        self.ES_API_PREFIXURI = self.getConf('es_api', 'prefixuri')
+        self.ES_API_PROJECTNAME = self.getConf('es_api', 'projectname')
+        self.ES_API_PORT = self.getConf('es_api', 'port')
+        self.DATAEXTRACT_API_PORT = self.getConf('dataextract_api', 'port')
 
 
     
@@ -118,9 +119,9 @@ class ConfigHandler:
         self.setConf('elasticsearch','sshpassword','otdev123')
         self.setConf('elasticsearch','synonymlocalfilepath','/data1/elasticsearch/elasticsearch-8.9.0/config/analysis')
         self.setConf('elasticsearch','synonymremotefilepath','synonym.txt')
-        self.setConf('api','prefixuri','/v1/')
-        self.setConf('api','projectname','essink')
-        self.setConf('api','port','8000')
+        self.setConf('es_api','prefixuri','/v1/')
+        self.setConf('es_api','projectname','essink')
+        self.setConf('es_api','port','8000')
         self.writeConfig(filename)
 
     
