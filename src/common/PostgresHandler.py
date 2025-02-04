@@ -27,14 +27,38 @@ class PostgresHandler:
         row = cursor.fetchall()
         return colnames,row
 
-    def getResultByQuery(self,query):
+    def getTableRecordWithSelectCondition(self,db,table,select,condition):
         cursor=self.conn.cursor()
-        cursor.execute(query)
+        cursor.execute(f'select {select} from {db}.{table} where {condition}')
         colnames = [desc[0] for desc in cursor.description]
         row = cursor.fetchall()
         return colnames,row
-    
-    
+
+    def getResultByQuery(self, query):
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        colnames = [desc[0] for desc in cursor.description]
+        row = cursor.fetchall()
+        return colnames, row
+
+    def getResultByQueryWithArgument(self, query,args):
+        cursor = self.conn.cursor()
+        cursor.execute(query,args)
+        colnames = [desc[0] for desc in cursor.description]
+        row = cursor.fetchall()
+        return colnames, row
+
+    def executeQuery(self, query):
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+
+    def executeQueryWithArgument(self, query,args):
+        cursor = self.conn.cursor()
+        cursor.execute(query,args)
+
+    def commit(self):
+        self.conn.commit()
+
     def convertRecordToJsons(colnames,rows):
         jsons = []
         for row in rows:
