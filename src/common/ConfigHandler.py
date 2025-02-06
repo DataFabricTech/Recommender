@@ -87,6 +87,7 @@ class ConfigHandler:
         self.POSTGRES_ROLEDEPTTABLE = self.getConf('postgres', 'roledepttable')
         self.POSTGRES_ACCOUNTTABLE = self.getConf('postgres', 'accounttable')
         self.POSTGRES_HISTORYTABLE = self.getConf('postgres', 'historytable')
+        self.POSTGRES_DOWNLOADTABLE = self.getConf('postgres', 'downloadtable')
         self.POSTGRES_DEPTTABLE = self.getConf('postgres', 'depttable')
         self.ES_URL = self.getConf('elasticsearch', 'url')
         self.ES_METAINDEX = self.getConf('elasticsearch', 'metaindex')
@@ -106,6 +107,7 @@ class ConfigHandler:
         self.DATAEXTRACT_API_PREFIXURI = self.getConf('dataextract_api', 'prefixuri')
         self.DATAEXTRACT_API_PROJECTNAME = self.getConf('dataextract_api', 'projectname')
         self.DATAEXTRACT_API_PORT = self.getConf('dataextract_api', 'port')
+        self.DATAEXTRACT_API_SECURITYTOKEN = self.getConf('dataextract_api', 'securitytoken')
 
 
     
@@ -126,6 +128,7 @@ class ConfigHandler:
         self.setConf('postgres','roledepttable','<table>')
         self.setConf('postgres','accounttable','<table>')
         self.setConf('postgres','historytable','<table>')
+        self.setConf('postgres','downloadtable','<table>')
         self.setConf('postgres','depttable','<table>')
         self.setConf('elasticsearch','url','http://192.168.100.72:9200')
         self.setConf('elasticsearch','metaindex','index_analyzer')
@@ -145,6 +148,7 @@ class ConfigHandler:
         self.setConf('dataextract_api','prefixuri','/')
         self.setConf('dataextract_api','projectname','dataextract')
         self.setConf('dataextract_api','port','13200')
+        self.setConf('dataextract_api','securitytoken','security_token123')
         self.writeConfig(filename)
 
     
