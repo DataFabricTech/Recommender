@@ -108,9 +108,16 @@ class ConfigHandler:
         self.DATAEXTRACT_API_PROJECTNAME = self.getConf('dataextract_api', 'projectname')
         self.DATAEXTRACT_API_PORT = self.getConf('dataextract_api', 'port')
         self.DATAEXTRACT_API_SECURITYTOKEN = self.getConf('dataextract_api', 'securitytoken')
+        self.DATAEXTRACT_MAX_THREAD = self.getConf('dataextract', 'max_thread')
+        self.DATAEXTRACT_CHECK_INTERVAL = self.getConf('dataextract', 'check_interval')
+        self.DATAEXTRACT_SAVECSVPATH = self.getConf('dataextract', 'savecsvpath')
+        self.MINIO_HOST = self.getConf('minio', 'host')
+        self.MINIO_ACCESSKEY = self.getConf('minio', 'accesskey')
+        self.MINIO_SECRETKEY = self.getConf('minio', 'secretkey')
+        self.MINIO_DATAEXTRACT_BUCKET = self.getConf('minio', 'dataextract_bucket')
 
 
-    
+
     def setDefaultOptions(self,filename):
         self.addSection('postgres')
         self.addSection('elasticsearch')
@@ -149,12 +156,14 @@ class ConfigHandler:
         self.setConf('dataextract_api','projectname','dataextract')
         self.setConf('dataextract_api','port','13200')
         self.setConf('dataextract_api','securitytoken','security_token123')
+        self.setConf('dataextract','max_thread','5')
+        self.setConf('dataextract','check_interval','20')
+        self.setConf('dataextract','savecsvpath','C:\\Users\\HJ\\Downloads')
+        self.setConf('minio','host','192.168.100.72:44813')
+        self.setConf('minio','accesskey','NQ5aS8Ousl3iKVvKT5Dq')
+        self.setConf('minio','secretkey','5CZNY0XbhqCn86c6LJ5Sn4ctDqwVnIP3IcMlrzxF')
+        self.setConf('minio','dataextract_bucket','dataextract')
         self.writeConfig(filename)
-
-    
-    
-    
-    
     
     
     

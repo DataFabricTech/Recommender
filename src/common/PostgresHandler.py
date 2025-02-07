@@ -65,11 +65,14 @@ class PostgresHandler:
             jsons.append(dict(zip(colnames, row)))
         return jsons
 
+    def isConnected(self):
+        if self.conn.closed == 0:
+            return True
+        return False
 
     def close(self):
         if hasattr(self, 'conn') and self.conn != None:
             if self.conn.closed == 0:
-                self.conn.cursor().close()
                 self.conn.close()
 
     def __del__(self):
