@@ -115,6 +115,7 @@ class ConfigHandler:
         self.MINIO_ACCESSKEY = self.getConf('minio', 'accesskey')
         self.MINIO_SECRETKEY = self.getConf('minio', 'secretkey')
         self.MINIO_DATAEXTRACT_BUCKET = self.getConf('minio', 'dataextract_bucket')
+        self.MINIO_DOWNLOAD_LIMIT = self.getConf('minio', 'download_limit')
 
 
 
@@ -158,11 +159,12 @@ class ConfigHandler:
         self.setConf('dataextract_api','securitytoken','security_token123')
         self.setConf('dataextract','max_thread','5')
         self.setConf('dataextract','check_interval','20')
-        self.setConf('dataextract','savecsvpath','C:\\Users\\HJ\\Downloads')
+        self.setConf('dataextract','savecsvpath','/home/otdev/dataextract_csvdata')
         self.setConf('minio','host','192.168.100.72:44813')
         self.setConf('minio','accesskey','NQ5aS8Ousl3iKVvKT5Dq')
         self.setConf('minio','secretkey','5CZNY0XbhqCn86c6LJ5Sn4ctDqwVnIP3IcMlrzxF')
         self.setConf('minio','dataextract_bucket','dataextract')
+        self.setConf('minio','download_limit','7')
         self.writeConfig(filename)
     
     
