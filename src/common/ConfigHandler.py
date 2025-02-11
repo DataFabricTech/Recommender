@@ -8,10 +8,23 @@ class ConfigHandler:
         self.conf = configparser.ConfigParser()
         self.loadConfig(filename)
         self.loadVariables()
-        
+
+    def loadEnv(self):
+        filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../conf/environment.ini')
+        envconf = configparser.ConfigParser()
+        envconf.read(filepath)
+
+        if envconf is None or 'config' not in envconf.keys() or 'file_postfix' not in envconf['config'].keys():
+            env = 'local'
+        else:
+            env = envconf['config']['file_postfix']
+            
+        return env
+
     def loadConfig(self,filename):
         if filename == None:
-            filename = 'config.ini'
+            filename = f"config_{self.loadEnv()}.ini"
+
         self.loadfilename=filename
         filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../conf/'+filename)
         self.conf.read(filepath)
