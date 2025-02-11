@@ -1,5 +1,6 @@
 import os,configparser
 from pathlib import Path
+from Lib.CryptHandler import *
 
 class ConfigHandler:    
     
@@ -48,15 +49,24 @@ class ConfigHandler:
 
         return arr
 
-    
-    def getConf(self,section,key):
+    def getConf(self, section, key):
         try:
             result = self.conf[section][key]
         except KeyError:
             result = None
 
         return result
-    
+
+    def getConfWithDecode(self, section, key,cryptkey):
+
+        try:
+            result = self.conf[section][key]
+            if cryptkey is not None and result is not None and result.startswith("ENC("):
+                result = CryptHandler.decodeWithcryptkey(result,cryptkey)
+        except KeyError:
+            result = None
+
+        return result
 
     def addSection(self,section):
         self.conf.add_section(section)
@@ -73,6 +83,8 @@ class ConfigHandler:
 
     
     def loadVariables(self):
+        self.SECURITY_CRYPTKEY = self.getConf('security', 'cryptkey')
+
         self.POSTGRES_HOST = self.getConf('postgres', 'host')
         self.POSTGRES_PORT = self.getConf('postgres', 'port')
         self.POSTGRES_USER = self.getConf('postgres', 'user')
@@ -118,10 +130,16 @@ class ConfigHandler:
         self.MINIO_DOWNLOAD_LIMIT = self.getConf('minio', 'download_limit')
 
 
-
     def setDefaultOptions(self,filename):
+        self.addSection('security')
         self.addSection('postgres')
         self.addSection('elasticsearch')
+        self.addSection('trino')
+        self.addSection('es_api')
+        self.addSection('dataextract_api')
+        self.addSection('dataextract')
+        self.addSection('minio')
+        self.setConf('security','cryptkey','DataCatalog12#')
         self.setConf('postgres','host','192.168.100.110')
         self.setConf('postgres','port','15432')
         self.setConf('postgres','user','data_catalog')
