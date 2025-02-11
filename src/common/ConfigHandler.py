@@ -62,7 +62,7 @@ class ConfigHandler:
         try:
             result = self.conf[section][key]
             if cryptkey is not None and result is not None and result.startswith("ENC("):
-                result = CryptHandler.decodeWithcryptkey(result,cryptkey)
+                result = CryptHandler.decryptWithcryptkey(cryptkey,result)
         except KeyError:
             result = None
 
@@ -88,8 +88,7 @@ class ConfigHandler:
         self.POSTGRES_HOST = self.getConf('postgres', 'host')
         self.POSTGRES_PORT = self.getConf('postgres', 'port')
         self.POSTGRES_USER = self.getConf('postgres', 'user')
-        self.POSTGRES_PASSWORD = self.getConf('postgres', 'password')
-        print(CryptHandler.encryptWithcryptkey(self.SECURITY_CRYPTKEY,self.POSTGRES_PASSWORD))
+        self.POSTGRES_PASSWORD = self.getConfWithDecode('postgres', 'password',self.SECURITY_CRYPTKEY)
         self.POSTGRES_DATABASE = self.getConf('postgres', 'database')
         self.POSTGRES_SCHEMA = self.getConf('postgres', 'schema')
         self.POSTGRES_METATABLE = self.getConf('postgres', 'metatable')
@@ -107,8 +106,7 @@ class ConfigHandler:
         self.ES_SSHHOST = self.getConf('elasticsearch', 'sshhost')
         self.ES_SSHPORT = self.getConf('elasticsearch', 'sshport')
         self.ES_SSHID = self.getConf('elasticsearch', 'sshid')
-        self.ES_SSHPASSWORD = self.getConf('elasticsearch', 'sshpassword')
-        print(CryptHandler.encryptWithcryptkey(self.SECURITY_CRYPTKEY,self.ES_SSHPASSWORD))
+        self.ES_SSHPASSWORD = self.getConfWithDecode('elasticsearch', 'sshpassword',self.SECURITY_CRYPTKEY)
         self.ES_SYNONYMLOCALFILEPATH = self.getConf('elasticsearch', 'synonymlocalfilepath')
         self.ES_SYNONYMREMOTEFILEPATH = self.getConf('elasticsearch', 'synonymremotefilepath')
         self.TRINO_HOST = self.getConf('trino', 'host')
