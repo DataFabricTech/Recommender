@@ -1,12 +1,13 @@
 import os,sys,logging
 from pathlib import Path
+from datetime import datetime
 from logging.handlers import TimedRotatingFileHandler
 
 loggers = {}
 
 class LogHandler:
     
-    def __init__(self,code_path,log_filename,print_flag):
+    def __init__(self,code_path,log_filename,logkeepdate,print_flag):
         temp_path = Path(os.path.dirname(code_path))
         limiter = 0
         while limiter < 10 :
@@ -17,13 +18,57 @@ class LogHandler:
             limiter = limiter + 1
 
         log_path = str(temp_path.resolve())+'/logs'
-        self.setLogger(log_path,log_filename,print_flag)
+        self.setLogger(log_path,log_filename,logkeepdate,print_flag)
+
+    def removeOldBackup(self,log_filename, log_path, logkeepdate):
+
+        log_file_list = os.listdir(log_path)
+        log_file_path = f"{log_path}{log_filename}.log"
+
+        correct_log_date = []
+        for log_file in log_file_list:
+
+            if os.path.isfile(f"{log_path}{log_file}") is False:
+                continue
+
+            if not log_file.startswith(f"{log_filename}.log"):
+                continue
+
+            log_file_split = log_file.split(".")
+
+            if len(log_file_split) < 3:
+                continue
+
+            log_date = log_file_split[2]
+
+            try:
+                datetime.strptime(log_date, '%Y%m%d')
+            except Exception as e:
+                continue
+
+            if log_date not in correct_log_date:
+                correct_log_date.append(log_date)
+
+        if len(correct_log_date) > logkeepdate:
+            correct_log_date.sort(reverse=True)
+            for log_date in correct_log_date[logkeepdate:]:
+                remove_file_path = f"{log_file_path}.{log_date}"
+                if os.path.isfile(remove_file_path) is True:
+                    print(remove_file_path)
+#                    os.remove(remove_file_path)
+                for index in range(1, logkeepdate + 1):
+                    if os.path.isfile(f"{remove_file_path}.{index}") is True:
+                         print(remove_file_path)
+#                        os.remove(f"{remove_file_path}.{index}")
 
     def setLoglevel(self):
         self.logger.setLevel(logging.INFO)
 
-    def setLogger(self,log_file_dir,log_file_name, print_flag=False):
+    def setLogger(self,log_file_dir,log_file_name,logkeepdate,print_flag):
         global loggers
+
+        if log_file_dir and os.path.isdir(log_file_dir) is True:
+            self.removeOldBackup(log_file_name, log_file_dir,logkeepdate)
 
         if loggers.get(log_file_name):
             self.logger = loggers.get(log_file_name)

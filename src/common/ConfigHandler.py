@@ -18,7 +18,7 @@ class ConfigHandler:
             env = 'local'
         else:
             env = envconf['config']['file_postfix']
-            
+
         return env
 
     def loadConfig(self,filename):
@@ -98,6 +98,7 @@ class ConfigHandler:
     def loadVariables(self):
         self.SECURITY_CRYPTKEY = self.getConf('security', 'cryptkey')
 
+        self.LOG_KEEPDATE_LIMIT = int(self.getConf('log', 'keepdatelimit'))
         self.POSTGRES_HOST = self.getConf('postgres', 'host')
         self.POSTGRES_PORT = self.getConf('postgres', 'port')
         self.POSTGRES_USER = self.getConf('postgres', 'user')
@@ -145,6 +146,7 @@ class ConfigHandler:
 
     def setDefaultOptions(self,filename):
         self.addSection('security')
+        self.addSection('log')
         self.addSection('postgres')
         self.addSection('elasticsearch')
         self.addSection('trino')
@@ -153,6 +155,7 @@ class ConfigHandler:
         self.addSection('dataextract')
         self.addSection('minio')
         self.setConf('security','cryptkey','DataCatalog12#')
+        self.setConf('log','keepdatelimit','30')
         self.setConf('postgres','host','192.168.100.110')
         self.setConf('postgres','port','15432')
         self.setConf('postgres','user','data_catalog')
