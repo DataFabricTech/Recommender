@@ -28,7 +28,7 @@ class LogHandler:
         correct_log_date = []
         for log_file in log_file_list:
 
-            if os.path.isfile(f"{log_path}{log_file}") is False:
+            if os.path.isfile(f"{log_path}/{log_file}") is False:
                 continue
 
             if not log_file.startswith(f"{log_filename}.log"):
@@ -49,6 +49,7 @@ class LogHandler:
             if log_date not in correct_log_date:
                 correct_log_date.append(log_date)
 
+        print('현재 프로그램 로그 갯수 : ' + str(len(correct_log_date)))
         if len(correct_log_date) > logkeepdate:
             correct_log_date.sort(reverse=True)
             for log_date in correct_log_date[logkeepdate:]:
