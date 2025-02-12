@@ -21,9 +21,8 @@ class LogHandler:
         self.setLogger(log_path,log_filename,logkeepdate,print_flag)
 
     def removeOldBackup(self,log_filename, log_path, logkeepdate):
-
         log_file_list = os.listdir(log_path)
-        log_file_path = f"{log_path}{log_filename}.log"
+        log_file_path = f"{log_path}/{log_filename}.log"
 
         correct_log_date = []
         for log_file in log_file_list:
@@ -55,12 +54,10 @@ class LogHandler:
             for log_date in correct_log_date[logkeepdate:]:
                 remove_file_path = f"{log_file_path}.{log_date}"
                 if os.path.isfile(remove_file_path) is True:
-                    print(remove_file_path)
-#                    os.remove(remove_file_path)
+                    os.remove(remove_file_path)
                 for index in range(1, logkeepdate + 1):
                     if os.path.isfile(f"{remove_file_path}.{index}") is True:
-                         print(remove_file_path)
-#                        os.remove(f"{remove_file_path}.{index}")
+                        os.remove(f"{remove_file_path}.{index}")
 
     def setLoglevel(self):
         self.logger.setLevel(logging.INFO)
