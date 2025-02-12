@@ -48,7 +48,6 @@ class LogHandler:
             if log_date not in correct_log_date:
                 correct_log_date.append(log_date)
 
-        print('현재 프로그램 로그 갯수 : ' + str(len(correct_log_date)))
         if len(correct_log_date) > logkeepdate:
             correct_log_date.sort(reverse=True)
             for log_date in correct_log_date[logkeepdate:]:
