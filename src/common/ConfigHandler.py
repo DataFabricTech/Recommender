@@ -115,6 +115,7 @@ class ConfigHandler:
         self.POSTGRES_HISTORYTABLE = self.getConf('postgres', 'historytable')
         self.POSTGRES_DOWNLOADTABLE = self.getConf('postgres', 'downloadtable')
         self.POSTGRES_DEPTTABLE = self.getConf('postgres', 'depttable')
+        self.POSTGRES_CODETABLE = self.getConf('postgres', 'codetable')
         self.ES_URL = self.getConf('elasticsearch', 'url')
         self.ES_METAINDEX = self.getConf('elasticsearch', 'metaindex')
         self.ES_SSHHOST = self.getConf('elasticsearch', 'sshhost')
@@ -146,6 +147,12 @@ class ConfigHandler:
         self.MINIO_SECRETKEY = self.getConf('minio', 'secretkey')
         self.MINIO_DATAEXTRACT_BUCKET = self.getConf('minio', 'dataextract_bucket')
         self.MINIO_DOWNLOAD_LIMIT = self.getConf('minio', 'download_limit')
+        self.SMTP_SERVER = self.getConf('smtp', 'server')
+        self.SMTP_PORT = self.getConf('smtp', 'port')
+        self.SMTP_SSL = self.getConf('smtp', 'ssl')
+        self.SMTP_USER = self.getConf('smtp', 'user')
+        self.SMTP_PASSWORD = self.getConf('smtp', 'password')
+        self.SMTP_DEFAULT_SENDER = self.getConf('smtp', 'default_sender')
 
 
     def setDefaultOptions(self,filename):
@@ -176,6 +183,7 @@ class ConfigHandler:
         self.setConf('postgres','historytable','<table>')
         self.setConf('postgres','downloadtable','<table>')
         self.setConf('postgres','depttable','<table>')
+        self.setConf('postgres','codetable','<table>')
         self.setConf('elasticsearch','url','http://192.168.100.72:9200')
         self.setConf('elasticsearch','metaindex','index_analyzer')
         self.setConf('elasticsearch','sshhost','192.168.100.72')
@@ -207,8 +215,14 @@ class ConfigHandler:
         self.setConf('minio','secretkey','5CZNY0XbhqCn86c6LJ5Sn4ctDqwVnIP3IcMlrzxF')
         self.setConf('minio','dataextract_bucket','dataextract')
         self.setConf('minio','download_limit','7')
+        self.setConf('smtp','server','192.168.100.72')
+        self.setConf('smtp','port','1025')
+        self.setConf('smtp','ssl','false')
+        self.setConf('smtp','user','')
+        self.setConf('smtp','password','')
+        self.setConf('smtp','default_sender','data@test.com')
         self.writeConfig(filename)
-    
+
     
     
     
