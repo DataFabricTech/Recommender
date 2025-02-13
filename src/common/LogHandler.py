@@ -101,21 +101,21 @@ class LogHandler:
         
 
     def debug(self,message):
-        self.logger.debug(message, stacklevel=2)
+        self.logger.debug(message, stacklevel=3)
         
         
     def info(self,message):
-        self.logger.info(message, stacklevel=2)
+        self.logger.info(message, stacklevel=3)
         
         
     def warning(self,message):
-        self.logger.warning(message, stacklevel=2)
+        self.logger.warning(message, stacklevel=3)
     
     
     def error(self,message):
-        self.logger.error(message, stacklevel=2)
+        self.logger.error(message, stacklevel=3)
         
     
     def critical(self,message):
-        self.logger.critical(message, stacklevel=2)
+        self.logger.critical(message, stacklevel=3)
         
