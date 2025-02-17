@@ -152,7 +152,6 @@ class ConfigHandler:
         self.SMTP_SSL = self.getConf('smtp', 'ssl')
         self.SMTP_USER = self.getConf('smtp', 'user')
         self.SMTP_PASSWORD = self.getConf('smtp', 'password')
-        self.SMTP_DEFAULT_SENDER = self.getConf('smtp', 'default_sender')
 
 
     def setDefaultOptions(self,filename):
@@ -220,7 +219,6 @@ class ConfigHandler:
         self.setConf('smtp','ssl','false')
         self.setConf('smtp','user','')
         self.setConf('smtp','password','')
-        self.setConf('smtp','default_sender','data@test.com')
         self.writeConfig(filename)
 
     
