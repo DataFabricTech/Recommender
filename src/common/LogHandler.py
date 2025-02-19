@@ -58,8 +58,8 @@ class LogHandler:
                     if os.path.isfile(f"{remove_file_path}.{index}") is True:
                         os.remove(f"{remove_file_path}.{index}")
 
-    def setLoglevel(self):
-        self.logger.setLevel(logging.INFO)
+    def setLoglevel(self,loglevel):
+        self.logger.setLevel(logging.getLevelName(str(loglevel)))
 
     def setLogger(self,log_file_dir,log_file_name,logkeepdate,print_flag):
         global loggers

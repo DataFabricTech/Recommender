@@ -1,4 +1,5 @@
-import os,configparser
+import os
+import configparser
 from pathlib import Path
 from Lib.CryptHandler import *
 
@@ -10,16 +11,12 @@ class ConfigHandler:
         self.loadVariables()
 
     def loadEnv(self):
-        filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../conf/environment.ini')
-        envconf = configparser.ConfigParser()
-        envconf.read(filepath)
+        environment = os.getenv("ENVIRONMENT", "local")
 
-        if envconf is None or 'config' not in envconf.keys() or 'file_postfix' not in envconf['config'].keys():
-            env = 'local'
-        else:
-            env = envconf['config']['file_postfix']
+        if environment == None:
+            environment = 'local'
 
-        return env
+        return environment
 
     def loadConfig(self,filename):
         if filename == None:
@@ -99,6 +96,7 @@ class ConfigHandler:
         self.SECURITY_CRYPTKEY = self.getConf('security', 'cryptkey')
 
         self.LOG_KEEPDATE_LIMIT = int(self.getConf('log', 'keepdatelimit'))
+        self.LOG_LEVEL = self.getConf('log', 'level')
         self.POSTGRES_HOST = self.getConf('postgres', 'host')
         self.POSTGRES_PORT = self.getConf('postgres', 'port')
         self.POSTGRES_USER = self.getConf('postgres', 'user')
@@ -132,6 +130,9 @@ class ConfigHandler:
         self.ES_API_PREFIXURI = self.getConf('es_api', 'prefixuri')
         self.ES_API_PROJECTNAME = self.getConf('es_api', 'projectname')
         self.ES_API_PORT = self.getConf('es_api', 'port')
+        self.ES_SEARCH_API_PREFIXURI = self.getConf('es_search_api', 'prefixuri')
+        self.ES_SEARCH_API_PROJECTNAME = self.getConf('es_search_api', 'projectname')
+        self.ES_SEARCH_API_PORT = self.getConf('es_search_api', 'port')
         self.DATAEXTRACT_API_URL = self.getConf('dataextract_api', 'url')
         self.DATAEXTRACT_API_PREFIXURI = self.getConf('dataextract_api', 'prefixuri')
         self.DATAEXTRACT_API_PROJECTNAME = self.getConf('dataextract_api', 'projectname')
