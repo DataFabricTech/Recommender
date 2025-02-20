@@ -73,7 +73,7 @@ class ConfigHandler:
             result = self.conf[section][key]
             if cryptkey is not None and result is not None and result.startswith("ENC("):
                 result = CryptHandler.decryptWithcryptkey(cryptkey,result)
-        except KeyError:
+        except Exception:
             result = None
 
         return result
