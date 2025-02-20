@@ -24,7 +24,7 @@ class ConfigHandler:
 
         self.loadfilename=filename
         filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../conf/'+filename)
-        self.conf.read(filepath)
+        self.conf.read(filepath, encoding="utf-8")
         
 
     def writeConfig(self,filename=object()):
