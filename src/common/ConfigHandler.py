@@ -144,7 +144,7 @@ class ConfigHandler:
         self.DATAEXTRACT_CHECK_INTERVAL = self.getConf('dataextract', 'check_interval')
         self.DATAEXTRACT_SAVECSVPATH = self.getConf('dataextract', 'savecsvpath')
         self.DATAEXTRACT_REPORTMAIL = self.getConf('dataextract', 'reportmail')
-        self.MINIO_HOST = self.getConf('minio', 'host')
+        self.MINIO_URL = self.getConf('minio', 'url')
         self.MINIO_ACCESSKEY = self.getConf('minio', 'accesskey')
         self.MINIO_SECRETKEY = self.getConf('minio', 'secretkey')
         self.MINIO_DATAEXTRACT_BUCKET = self.getConf('minio', 'dataextract_bucket')
