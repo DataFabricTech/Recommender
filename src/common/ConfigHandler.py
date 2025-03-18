@@ -147,6 +147,7 @@ class ConfigHandler:
         self.MINIO_URL = self.getConf('minio', 'url')
         self.MINIO_ACCESSKEY = self.getConf('minio', 'accesskey')
         self.MINIO_SECRETKEY = self.getConf('minio', 'secretkey')
+        self.MINIO_SECURE = self.getConf('minio', 'secure')
         self.MINIO_DATAEXTRACT_BUCKET = self.getConf('minio', 'dataextract_bucket')
         self.MINIO_DOWNLOAD_LIMIT = self.getConf('minio', 'download_limit')
         self.SMTP_SERVER = self.getConf('smtp', 'server')
