@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: recommender
+  name: recommender
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommender
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: recommender
+    spec:
+      containers:
+        - env:
+            - name: CONFIG_FILE_PATH
+              value: /app/config_templates/config.yml
+          image: repo.iris.tools/datafabric/recommender:v1.0.0-RC20241129-25d0a54
+          imagePullPolicy: IfNotPresent
+          name: recommender
+          volumeMounts:
+            - mountPath: /app/config_templates
+              name: recommender
+          ports:
+            - containerPort: 8080
+              name: recommender-ui
+              protocol: TCP
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: recommender
+          name: recommender
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommender
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: recommender-ui
+  selector:
+    app: recommender
+  sessionAffinity: None
+  type: NodePort
+---
+apiVersion: v1
+data:
+  config.yml: |+
+    server:
+      host: 0.0.0.0
+      port: 8080
+      workers: 1
+      process_timeout: 60
+      download_encode: utf-8
+
+    log:
+      logfile: logs/recommender.log
+      level: DEBUG
+
+    sentry:
+      enable: False
+      dsn: https://examplePublicKey@o0.ingest.sentry.io/0  # DSN include token of Sentry and url
+      level: 20  # Capture info and above as breadcrumbs. level -> 0:NOTSET, 10:DEBUG, 20:INFO, 30:WARNING, 40:ERROR, 50:CRITICAL
+      event_level: 40  # Send errors as events. level -> 0:NOTSET, 10:DEBUG, 20:INFO, 30:WARNING, 40:ERROR, 50:CRITICAL
+      traces_sample_rate: 0.1  # 0 to not send this trace to Sentry. Between 0 and 1 to send this trace to Sentry.
+      traces_exclude_urls:
+        - /recommender/docs
+        - /recommender/redoc
+        - /recommender/openapi.json
+      environment: dev
+
+    log_server:
+      host: 0.0.0.0
+      port: 19009
+
+    cron:
+      hour: 2
+      minute: 0
+
+    open_metadata:
+      host: fabric-server
+      port: 8585
+      id: admin
+      pw: admin
+      limit: 10000
+      min_cluster_size: 3
+      top_n: 5
+
+    database:
+      dialects: postgresql
+      host: ovp-db
+      port: 5432
+      id: recommender
+      pw: recommender
+      db: recommender
+
+    recommend_settings:
+      recommended_count: 5
+
+      clustering:
+        trained_model_path: ./trained_models
+
+kind: ConfigMap
+metadata:
+  name: recommender
