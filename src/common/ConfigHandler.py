@@ -23,7 +23,7 @@ class ConfigHandler:
             filename = f"config_{self.loadEnv()}.ini"
 
         self.loadfilename=filename
-        filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../conf/'+filename)
+        filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../../conf/'+filename)
         self.conf.read(filepath, encoding="utf-8")
         
 
@@ -34,7 +34,7 @@ class ConfigHandler:
         if filename == None:
             filename = 'config.ini'
             
-        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../conf/'+filename)
+        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../conf/'+filename)
         with open(filepath, 'w', encoding='utf-8') as configfile:
             self.conf.write(configfile)
         
@@ -154,6 +154,11 @@ class ConfigHandler:
         self.MINIO_FILE_SERVICE_PREFIXURI = self.getConf('minio_file_service', 'prefixuri')
         self.MINIO_FILE_SERVICE_HOST = self.getConf('minio_file_service', 'host')
         self.MINIO_FILE_SERVICE_PORT = self.getConf('minio_file_service', 'port')
+        self.MONITORING_SERVICE_TITLE = self.getConf('monitoring', 'title')
+        self.MONITORING_SERVICE_DESCRIPTION = self.getConf('monitoring', 'description')
+        self.MONITORING_SERVICE_PREFIXURI = self.getConf('monitoring', 'prefixuri')
+        self.MONITORING_SERVICE_HOST = self.getConf('monitoring', 'host')
+        self.MONITORING_SERVICE_PORT = self.getConf('monitoring', 'port')
         self.MINIO_UNSTRUCTURED_BUCKET = self.getConf('minio', 'unstructured_bucket')
         self.MINIO_DOWNLOAD_LIMIT = self.getConf('minio', 'download_limit')
         self.SMTP_SERVER = self.getConf('smtp', 'server')

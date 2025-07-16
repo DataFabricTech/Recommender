@@ -40,6 +40,7 @@ class PostgresHandler:
         colnames = [desc[0] for desc in cursor.description]
         row = cursor.fetchall()
         return colnames, row
+        
 
     def getResultByQueryWithArgument(self, query,args):
         cursor = self.conn.cursor()
@@ -48,13 +49,45 @@ class PostgresHandler:
         row = cursor.fetchall()
         return colnames, row
 
+    def getResultByQueryToDict(self, query):
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        dict_rows = [{col: val for col, val in zip(colnames, row)} for row in rows]
+        return dict_rows
+    
+    def getResultByQueryWithArgumentToDict(self, query,args):
+        cursor = self.conn.cursor()
+        cursor.execute(query,args)
+        rows = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        dict_rows = [{col: val for col, val in zip(colnames, row)} for row in rows]
+        return dict_rows
+
+    def getResultByQueryToValue(self, query):
+        cursor = self.conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        value_rows = [row[0] for row in rows]
+        return value_rows
+    
+    def getResultByQueryWithArgumentToValue(self, query,args):
+        cursor = self.conn.cursor()
+        cursor.execute(query,args)
+        rows = cursor.fetchall()
+        value_rows = [row[0] for row in rows]
+        return value_rows
+
     def executeQuery(self, query):
         cursor = self.conn.cursor()
         cursor.execute(query)
+        return cursor
 
     def executeQueryWithArgument(self, query,args):
         cursor = self.conn.cursor()
         cursor.execute(query,args)
+        return cursor
 
     def commit(self):
         self.conn.commit()
