@@ -23,7 +23,7 @@ class ConfigHandler:
             filename = f"config_{self.loadEnv()}.ini"
 
         self.loadfilename=filename
-        filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../../conf/'+filename)
+        filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../conf/'+filename)
         self.conf.read(filepath, encoding="utf-8")
         
 
@@ -34,7 +34,7 @@ class ConfigHandler:
         if filename == None:
             filename = 'config.ini'
             
-        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../conf/'+filename)
+        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../conf/'+filename)
         with open(filepath, 'w', encoding='utf-8') as configfile:
             self.conf.write(configfile)
         
