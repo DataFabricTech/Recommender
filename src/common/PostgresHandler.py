@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extras import execute_values
 
 class PostgresHandler:
     def __init__(self, host,port,dbname,user,password):
@@ -87,6 +88,11 @@ class PostgresHandler:
     def executeQueryWithArgument(self, query,args):
         cursor = self.conn.cursor()
         cursor.execute(query,args)
+        return cursor
+    
+    def executeValuesQueryWithArgument(self, query,args):
+        cursor = self.conn.cursor()
+        execute_values(cursor, query,args)
         return cursor
 
     def commit(self):
