@@ -179,4 +179,11 @@ class ConfigHandler:
         self.SMTP_SSL = self.getConf('smtp', 'ssl')
         self.SMTP_USER = self.getConf('smtp', 'user')
         self.SMTP_PASSWORD = self.getConf('smtp', 'password')
+        """ 
+        Recommender system info
+        """
+        self.RECOMMENDER_API_PREFIXURI = self.getConf('recommender', 'prefixuri')
+        self.RECOMMENDER_API_PROJECTNAME = self.getConf('recommender', 'projectname')
+        self.RECOMMENDER_API_PORT = self.getConf('recommender', 'port')
+        self.RECOMMENDER_DATA_DIR = self.getConf('recommender', 'data_dir')
 
