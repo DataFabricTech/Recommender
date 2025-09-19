@@ -6,7 +6,7 @@ from Lib.ConfigHandler import *
 from Lib.LogHandler import *
 
 conf = ConfigHandler()
-log = LogHandler(code_path=os.path.abspath(__file__), log_filename='Recomender',
+log = LogHandler(code_path=os.path.abspath(__file__), log_filename='Recommender',
                  logkeepdate=conf.LOG_KEEPDATE_LIMIT, print_flag=True)
 log.setLoglevel(conf.LOG_LEVEL)
 
