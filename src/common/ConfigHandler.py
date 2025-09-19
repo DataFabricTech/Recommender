@@ -187,3 +187,5 @@ class ConfigHandler:
         self.RECOMMENDER_API_PORT = self.getConf('recommender', 'port')
         self.RECOMMENDER_DATA_DIR = self.getConf('recommender', 'data_dir')
 
+        """sync"""
+        self.ESSYNC_BATCH_SIZE = self.getConf('elasticsearch.sync', 'sync_batch_size')
