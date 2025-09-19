@@ -188,4 +188,4 @@ class ConfigHandler:
         self.RECOMMENDER_DATA_DIR = self.getConf('recommender', 'data_dir')
 
         """sync"""
-        self.ESSYNC_BATCH_SIZE = self.getConf('elasticsearch.sync', 'sync_batch_size')
+        self.ESSYNC_BATCH_SIZE = int(self.getConf('elasticsearch.sync', 'sync_batch_size'))
