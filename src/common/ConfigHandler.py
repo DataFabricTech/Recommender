@@ -127,6 +127,7 @@ class ConfigHandler:
         self.TRINO_HOST = self.getConf('trino', 'host')
         self.TRINO_PORT = self.getConf('trino', 'port')
         self.TRINO_USER = self.getConf('trino', 'user')
+        self.ES_API_HOST = self.getConf('es_api', 'host')
         self.ES_API_PREFIXURI = self.getConf('es_api', 'prefixuri')
         self.ES_API_PROJECTNAME = self.getConf('es_api', 'projectname')
         self.ES_API_PORT = self.getConf('es_api', 'port')
@@ -189,3 +190,15 @@ class ConfigHandler:
 
         """sync"""
         self.ESSYNC_BATCH_SIZE = int(self.getConf('elasticsearch.sync', 'sync_batch_size'))
+        
+        """
+        Data Integration
+        """
+        self.DATAINTEGRATION_API_HOST = self.getConf('dataintegration', 'host')
+        self.DATAINTEGRATION_API_PORT = self.getConf('dataintegration', 'port')
+        self.DATAINTEGRATION_API_PROJECTNAME = self.getConf(
+            'dataintegration', 'projectname')
+        self.DATAINTEGRATION_API_PREFIXURI = self.getConf(
+            'dataintegration', 'prefixuri')
+        self.DATAINTEGRATION_DEFAULT_SCHEMA = self.getConf('dataintegration', 'trino_default_schema')
+        
