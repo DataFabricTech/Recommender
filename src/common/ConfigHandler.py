@@ -23,7 +23,8 @@ class ConfigHandler:
             filename = f"config_{self.loadEnv()}.ini"
 
         self.loadfilename=filename
-        filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../../conf/'+filename)
+        # filepath = os.path.join(Path(os.path.dirname(os.path.abspath(__file__))).parent, '../../conf/'+filename)
+        filepath = f"/data_catalog_solution/conf/{filename}"
         self.conf.read(filepath, encoding="utf-8")
         
 
