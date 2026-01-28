@@ -21,6 +21,14 @@ class PostgresHandler:
         row = cursor.fetchall()
         return colnames,row
 
+    def getTableRecordVector(self,db,table):
+        # llm agent에 테스트할 데이터는 catalog 시스템으로 한전했기 때문에 조건을 넣어줬음.
+        cursor=self.conn.cursor()
+        cursor.execute(f"select * from {db}.{table} where system_id = '109ae637-9e13-44f9-9686-a79cf1e12499'")
+        colnames = [desc[0] for desc in cursor.description]
+        row = cursor.fetchall()
+        return colnames,row
+
     def getTableRecordWithCondition(self,db,table,condition):
         cursor=self.conn.cursor()
         cursor.execute(f'select * from {db}.{table} where {condition}')
