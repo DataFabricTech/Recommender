@@ -10,8 +10,14 @@ log = LogHandler(code_path=os.path.abspath(__file__), log_filename='Recommender'
                  logkeepdate=conf.LOG_KEEPDATE_LIMIT, print_flag=True)
 log.setLoglevel(conf.LOG_LEVEL)
 
-app = FastAPI(title=conf.RECOMMENDER_API_PROJECTNAME, openapi_url=None,
-              redoc_url=None, swagger_ui_parameters={"defaultModelsExpandDepth": -1})
+_is_local = conf.loadEnv() == "local"
+app = FastAPI(
+    title=conf.RECOMMENDER_API_PROJECTNAME,
+    openapi_url="/openapi.json" if _is_local else None,
+    docs_url="/docs" if _is_local else None,
+    redoc_url="/redoc" if _is_local else None,
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1},
+)
 app.add_middleware(CORSMiddleware, allow_origins=[
     "*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"],)
 
