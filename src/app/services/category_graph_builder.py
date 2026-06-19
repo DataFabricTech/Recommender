@@ -70,12 +70,16 @@ def build_category_graph(
 
     cluster_to_cat, _sim = assign_clusters_to_categories(centroids, category_emb)
 
+    # 테이블↔배정 카테고리 코사인 유사도(대표성) 계산용 정규화
+    cat_norm = _l2_normalize(category_emb)
+
     cat_counts = [0] * K
     table_nodes = []
     edges = []
     for i, mid in enumerate(ids):
         cat = cluster_to_cat[int(labels[i])]
         cat_counts[cat] += 1
+        similarity = float(np.dot(table_norm[i], cat_norm[cat]))  # 대표성: 높을수록 카테고리에 가까움
         meta = node_meta.get(mid, {})
         table_nodes.append({
             "id": mid,
@@ -84,6 +88,7 @@ def build_category_graph(
             "size": int(meta.get("size") or 0),
             "type": "table",
             "category": cat,
+            "similarity": round(similarity, 6),
         })
         edges.append({"source": f"cat_{cat}", "target": mid})
 
