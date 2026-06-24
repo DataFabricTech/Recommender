@@ -1,18 +1,19 @@
-"""데이터 카테고리 차트용 그래프 생성 (순수 로직, numpy/sklearn/scipy 만 의존).
+"""데이터 카테고리 차트용 그래프 생성 (순수 로직, numpy 만 의존).
 
-기존 리커맨더 임베딩(테이블 N×d)을 K-기반 클러스터링(K=카테고리 수)으로 군집화하고,
-각 군집의 centroid 를 '사전정의 카테고리' 임베딩에 1:1 최적배정(헝가리안)으로 매핑한다.
-출력: 루트 + 카테고리 노드(20) + 테이블 노드 + 엣지(루트→카테고리→테이블).
+기존 리커맨더 임베딩(테이블 N×d)을 '사전정의 카테고리' 임베딩(K×d)과 직접 비교하여,
+각 테이블을 코사인 유사도가 가장 높은 카테고리 1개에 직접 배정한다(다대일).
+출력: 루트 + 카테고리 노드(K) + 테이블 노드 + 엣지(루트→카테고리→테이블).
 포털 카테고리 네트워크맵(드릴다운)이 그대로 읽는 형태.
+
+직접 배정을 쓰는 이유: 군집화(K-Means)+1:1 최적배정(헝가리안)은 군집 전체를 한 카테고리에
+'억지로' 짝지어, 잘 안 맞는 군집의 테이블이 엉뚱한 카테고리로 끌려간다. 테이블마다 가장
+비슷한 카테고리를 직접 고르면 그 떠밀림이 사라져 분류 정확도가 높다.
 """
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
 import numpy as np
-from scipy.optimize import linear_sum_assignment
-from sklearn.cluster import KMeans
-from sklearn.metrics.pairwise import cosine_similarity
 
 ROOT_ID = "__root__"
 ROOT_NAME = "전체 데이터"
@@ -25,16 +26,6 @@ def _l2_normalize(mat: np.ndarray) -> np.ndarray:
     return mat / norms
 
 
-def assign_clusters_to_categories(centroids: np.ndarray, category_emb: np.ndarray):
-    """centroid(K×d) ↔ category(K×d) 코사인 유사도로 1:1 최적배정.
-
-    반환: (cluster_idx -> category_idx) dict, 유사도 행렬 K×K.
-    """
-    sim = cosine_similarity(centroids, category_emb)
-    row, col = linear_sum_assignment(-sim)  # 유사도 최대화 = -sim 최소화
-    return {int(r): int(c) for r, c in zip(row, col)}, sim
-
-
 def build_category_graph(
     table_emb,
     ids,
@@ -42,10 +33,10 @@ def build_category_graph(
     category_names,
     category_emb,
     *,
-    random_state: int = 42,
-    n_init: int = 10,
+    random_state: int = 42,  # 하위호환용(미사용)
+    n_init: int = 10,        # 하위호환용(미사용)
 ) -> dict:
-    """카테고리 차트 graph payload 생성.
+    """카테고리 차트 graph payload 생성 (직접 배정).
 
     table_emb: 테이블 임베딩 N×d
     ids: meta_id N개 (table_emb 행 순서와 동일)
@@ -62,24 +53,20 @@ def build_category_graph(
     if category_emb.shape[0] != K:
         raise ValueError(f"카테고리 임베딩 수({category_emb.shape[0]})와 이름 수({K})가 다릅니다")
 
-    # 코사인 기반이 되도록 L2 정규화 후 K-Means (정규화 공간에서 유클리드 ≈ 코사인)
+    # L2 정규화 후 내적 = 코사인 유사도. 각 테이블을 가장 가까운 카테고리에 직접 배정.
     table_norm = _l2_normalize(table_emb)
-    km = KMeans(n_clusters=K, random_state=random_state, n_init=n_init)
-    labels = km.fit_predict(table_norm)
-    centroids = km.cluster_centers_
-
-    cluster_to_cat, _sim = assign_clusters_to_categories(centroids, category_emb)
-
-    # 테이블↔배정 카테고리 코사인 유사도(대표성) 계산용 정규화
     cat_norm = _l2_normalize(category_emb)
+    sims = table_norm @ cat_norm.T        # N×K 코사인 유사도
+    assign = sims.argmax(axis=1)          # 테이블별 최적 카테고리
+    best = sims.max(axis=1)               # 그 유사도(대표성)
 
     cat_counts = [0] * K
     table_nodes = []
     edges = []
     for i, mid in enumerate(ids):
-        cat = cluster_to_cat[int(labels[i])]
+        cat = int(assign[i])
         cat_counts[cat] += 1
-        similarity = float(np.dot(table_norm[i], cat_norm[cat]))  # 대표성: 높을수록 카테고리에 가까움
+        similarity = float(best[i])  # 대표성: 높을수록 카테고리에 가까움
         meta = node_meta.get(mid, {})
         table_nodes.append({
             "id": mid,
@@ -102,7 +89,7 @@ def build_category_graph(
 
     return {
         "generated_at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
-        "params": {"algorithm": "kmeans", "k": K, "mapping": "hungarian", "source": "embedding"},
+        "params": {"algorithm": "direct", "k": K, "mapping": "argmax", "source": "embedding"},
         "stats": {"table_count": n, "category_count": K},
         "categories": categories,
         "nodes": nodes,
