@@ -199,4 +199,14 @@ class ConfigHandler:
         self.DATAINTEGRATION_API_PREFIXURI = self.getConf(
             'dataintegration', 'prefixuri')
         self.DATAINTEGRATION_DEFAULT_SCHEMA = self.getConf('dataintegration', 'trino_default_schema')
+
+        """
+        Source Data Manager
+        """
+        self.SOURCEDATAMANAGER_API_HOST = self.getConf('sourcedatamanager', 'host')
+        self.SOURCEDATAMANAGER_API_PORT = self.getConf('sourcedatamanager', 'port')
+        self.SOURCEDATAMANAGER_API_PROJECTNAME = self.getConf(
+            'sourcedatamanager', 'projectname')
+        self.SOURCEDATAMANAGER_API_PREFIXURI = self.getConf(
+            'sourcedatamanager', 'prefixuri')
         
