@@ -186,10 +186,6 @@ class ConfigHandler:
         self.RECOMMENDER_API_PORT = self.getConf('recommender', 'port')
         self.RECOMMENDER_DATA_DIR = self.getConf('recommender', 'data_dir')
 
-        self.STANDARD_MAPPING_API_PREFIXURI = self.getConf('standardmapping', 'prefixuri')
-        self.STANDARD_MAPPING_API_PROJECTNAME = self.getConf('standardmapping', 'projectname')
-        self.STANDARD_MAPPING_API_PORT = self.getConf('standardmapping', 'port')
-
         """sync"""
         self.ESSYNC_BATCH_SIZE = int(self.getConf('elasticsearch.sync', 'sync_batch_size'))
         
