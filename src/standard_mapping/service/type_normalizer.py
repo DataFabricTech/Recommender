@@ -56,3 +56,45 @@ def type_matches(column_type: str, domain_data_type: str) -> bool:
     if c == OTHER or d == OTHER:
         return True
     return c == d
+
+
+import re
+
+_LEN_RE = re.compile(r"\(\s*(\d+)\s*(?:,\s*(\d+)\s*)?\)")
+
+
+def parse_length(raw_type: str):
+    """컬럼 타입 문자열에서 길이/소수점 추출.
+    'VARCHAR(100)'->(100,None), 'NUMERIC(5,2)'->(5,2), 'INT'->(None,None)."""
+    if not raw_type:
+        return (None, None)
+    m = _LEN_RE.search(str(raw_type))
+    if not m:
+        return (None, None)
+    size = int(m.group(1))
+    dec = int(m.group(2)) if m.group(2) else None
+    return (size, dec)
+
+
+def type_check(column_type, domain_data_type, domain_size=None, domain_decimal=None):
+    """계열 + 길이까지 비교. 도메인에 길이(domain_size)가 있으면 길이도 맞아야 일치.
+
+    반환: (ok: bool, reason: None|'TYPE'|'LENGTH', detail: str)
+    - 계열이 판단 불가(OTHER)면 통과.
+    - 컬럼에 길이 표기가 없으면(INT/TEXT 등) 길이 비교는 생략(계열만).
+    """
+    c = normalize_type(column_type)
+    d = normalize_type(domain_data_type)
+    if c == OTHER or d == OTHER:
+        return (True, None, "")
+    if c != d:
+        fam = {"CHAR": "문자", "NUM": "숫자", "DATE": "날짜"}
+        return (False, "TYPE", f"타입 계열 불일치 ({fam.get(c, c)} ≠ 표준 {fam.get(d, d)})")
+    col_size, col_dec = parse_length(column_type)
+    if col_size is None or domain_size in (None, "", 0):
+        return (True, None, "")
+    if int(col_size) != int(domain_size):
+        return (False, "LENGTH", f"길이 불일치 (컬럼 {col_size} ≠ 표준 {domain_size})")
+    if domain_decimal not in (None, "", 0) and col_dec is not None and int(col_dec) != int(domain_decimal):
+        return (False, "LENGTH", f"소수점 불일치 (컬럼 {col_dec} ≠ 표준 {domain_decimal})")
+    return (True, None, "")
