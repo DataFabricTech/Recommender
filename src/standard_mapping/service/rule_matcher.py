@@ -43,6 +43,7 @@ def match_column(
         "standard_term_id": None,
         "standard_word_ids": None,
         "recommended_term_ids": None,
+        "recommended_word_ids": None,
         "mapping_method": None,
     }
 
