@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from Recommender.controller import contorller
+from StandardMapping.controller import controller as standard_mapping_controller
 from Lib.ConfigHandler import *
 from Lib.LogHandler import *
 
@@ -23,6 +24,8 @@ app.add_middleware(CORSMiddleware, allow_origins=[
 
 api_router = APIRouter()
 api_router.include_router(contorller.router, prefix="/recommender")
+# 표준화매핑은 별도 컨테이너 대신 recommender 서비스에 통합 (관리포인트 최소화)
+api_router.include_router(standard_mapping_controller.router, prefix="/standard-mapping")
 app.include_router(api_router, prefix=conf.RECOMMENDER_API_PREFIXURI)
 
 
