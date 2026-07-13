@@ -37,7 +37,16 @@ def call_api(task_id, end_point):
         response = requests.get(url)
         response.raise_for_status()
         print(f"응답 상태 코드: {response.status_code}")
-        print(f"응답 내용: {response.text}") 
+        print(f"응답 내용: {response.text}")
+
+        payload = response.json()
+        service_status = int(payload.get("status_code", response.status_code))
+        if service_status >= 400:
+            message = payload.get("result", {}).get("message", response.text)
+            raise RuntimeError(
+                f"[{task_id}] Recommender service failed "
+                f"with status_code={service_status}: {message}"
+            )
     except requests.exceptions.RequestException as e:
         print(f"[{task_id}] 요청 실패: {e}")
         raise e
