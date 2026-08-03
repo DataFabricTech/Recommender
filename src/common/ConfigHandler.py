@@ -185,6 +185,10 @@ class ConfigHandler:
         self.RECOMMENDER_API_PROJECTNAME = self.getConf('recommender', 'projectname')
         self.RECOMMENDER_API_PORT = self.getConf('recommender', 'port')
         self.RECOMMENDER_DATA_DIR = self.getConf('recommender', 'data_dir')
+        self.RECOMMENDER_EMBEDDING_BACKEND = self.getConf('recommender', 'embedding_backend')
+        self.RECOMMENDER_EMBEDDING_URL = self.getConf('recommender', 'embedding_url')
+        self.RECOMMENDER_EMBEDDING_TIMEOUT_SECONDS = int(
+            self.getConf('recommender', 'embedding_timeout_seconds'))
 
         """sync"""
         self.ESSYNC_BATCH_SIZE = int(self.getConf('elasticsearch.sync', 'sync_batch_size'))
