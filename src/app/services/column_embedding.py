@@ -175,10 +175,15 @@ def build(names: Iterable[str], out_dir: str, encode=None,
     # 모델이 서로 구분하지 못하는 이름은 빼고 저장한다
     unique, vectors, dropped = _drop_degenerate(unique, vectors)
 
+    # 어떤 모델로 만든 벡터인지는 사전 자체에 남긴다. 설정값은 나중에 바뀔 수 있고,
+    # 유사 속성 탐지에서는 "이 벡터를 만든 모델"이 곧 시험의 전제이므로 파일이 스스로
+    # 설명해야 한다.
+    used_model = model_name or ("injected" if injected else purpose_default_model)
     path = os.path.join(out_dir, out_file)
     try:
         os.makedirs(out_dir, exist_ok=True)
-        np.savez_compressed(path, names=np.array(unique, dtype=object), vectors=vectors)
+        np.savez_compressed(path, names=np.array(unique, dtype=object), vectors=vectors,
+                            model=np.array(used_model), purpose=np.array(purpose))
     except OSError as e:
         raise RuntimeError(
             "임베딩 사전 저장 실패: %s (path=%s). "
@@ -186,7 +191,7 @@ def build(names: Iterable[str], out_dir: str, encode=None,
     return {"names": len(unique), "dim": int(vectors.shape[1]), "path": path,
             "dropped_degenerate": dropped,
             "purpose": purpose,
-            "model": model_name or ("injected" if injected else purpose_default_model)}
+            "model": used_model}
 
 
 def _drop_degenerate(names: List[str], vectors: np.ndarray,
@@ -221,9 +226,12 @@ def _drop_degenerate(names: List[str], vectors: np.ndarray,
 class ColumnEmbeddings:
     """저장된 벡터 사전. 없으면 비어 있는 상태로 동작한다(임베딩 항목만 빠진다)."""
 
-    def __init__(self, names: Sequence[str], vectors: np.ndarray):
+    def __init__(self, names: Sequence[str], vectors: np.ndarray,
+                 model: Optional[str] = None):
         self.index: Dict[str, int] = {n: i for i, n in enumerate(names)}
         self.vectors = vectors
+        # 사전을 만든 모델. 옛 사전에는 없으므로 None 일 수 있다.
+        self.model = model
         # 한 요청 안에서 같은 이름 쌍이 수없이 반복된다(카탈로그의 컬럼명은 재사용된다).
         # 인스턴스 수명이 요청 단위라 캐시가 무한히 자라지 않는다.
         self._sim_cache: Dict[Tuple[str, str], Optional[float]] = {}
@@ -239,7 +247,8 @@ class ColumnEmbeddings:
         with np.load(path, allow_pickle=True) as data:
             names = [str(n) for n in data["names"]]
             vectors = data["vectors"]
-        return cls(names, vectors)
+            model = str(data["model"]) if "model" in data.files else None
+        return cls(names, vectors, model)
 
     def vector(self, column_name: str) -> Optional[np.ndarray]:
         i = self.index.get(to_text(column_name))

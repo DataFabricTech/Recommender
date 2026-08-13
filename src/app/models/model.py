@@ -34,3 +34,37 @@ class FusionRecommendItemModel(BaseModel):
 class FusionRecommendResultModel(BaseModel):
     status_code: Optional[int] = None
     result: Optional[List[FusionRecommendItemModel]]
+
+
+class SimilarAttrMatchModel(BaseModel):
+    """탐지된 유사 속성 한 쌍."""
+    left: str
+    right: str
+    score: float
+    margin: float
+
+
+class SimilarAttrDictionaryModel(BaseModel):
+    """탐지에 사용한 임베딩 사전. 어떤 사전을 썼는지 응답으로 밝힌다."""
+    file: str
+    sha256: Optional[str] = None
+    names: int = 0
+    dim: int = 0
+    model: Optional[str] = None
+
+
+class SimilarAttrDetectResultModel(BaseModel):
+    left_table: str
+    right_table: str
+    left_columns: int
+    right_columns: int
+    excluded_left: List[str] = []
+    excluded_right: List[str] = []
+    params: dict = {}
+    dictionary: Optional[SimilarAttrDictionaryModel] = None
+    matches: List[SimilarAttrMatchModel] = []
+
+
+class SimilarAttrDetectResponseModel(BaseModel):
+    status_code: Optional[int] = None
+    result: Optional[SimilarAttrDetectResultModel] = None

@@ -189,6 +189,31 @@ class ConfigHandler:
         self.RECOMMENDER_EMBEDDING_URL = self.getConf('recommender', 'embedding_url')
         self.RECOMMENDER_EMBEDDING_TIMEOUT_SECONDS = int(
             self.getConf('recommender', 'embedding_timeout_seconds'))
+        # 컬럼명 임베딩은 categoryGraph 와 요구 특성이 달라 설정을 분리한다.
+        # categoryGraph 는 테이블 단위 긴 텍스트, 컬럼명은 3~5글자 짧은 구절이다.
+        # sentence(기본) | external(embedding_url 재사용) | local(klue/bert-base)
+        self.RECOMMENDER_COLUMN_EMBEDDING_BACKEND = self.getConf(
+            'recommender', 'column_embedding_backend') or 'sentence'
+        self.RECOMMENDER_COLUMN_EMBEDDING_MODEL = self.getConf(
+            'recommender', 'column_embedding_model')
+        # 모델 캐시 경로. 컨테이너의 HuggingFace 기본 경로는 읽기 전용인 경우가 많다.
+        # 미설정 시 data_dir 하위를 쓴다.
+        self.RECOMMENDER_COLUMN_EMBEDDING_CACHE_DIR = self.getConf(
+            'recommender', 'column_embedding_cache_dir') or os.path.join(
+                self.RECOMMENDER_DATA_DIR or '.', 'embedding_cache')
+        # 유사 속성 탐지 전용 사전의 모델. 미설정 시 BAAI/bge-m3 를 쓴다.
+        # 융합 추천과 사전을 나누는 이유는 column_embedding.py 의 _PURPOSES 주석 참조.
+        self.RECOMMENDER_SIMILAR_ATTR_EMBEDDING_MODEL = self.getConf(
+            'recommender', 'similar_attr_embedding_model')
+        # 뷰 계보 파싱 결과를 포털 데이터 흐름조회 테이블(<table_>*)에 반영할지.
+        # 수동 입력 기능과 공유하는 테이블이라 기본은 꺼둔다(명시적으로 켜야 동작).
+        self.RECOMMENDER_DIAGRAM_SYNC = str(
+            self.getConf('recommender', 'diagram_sync') or 'false').lower() == 'true'
+        # 뷰가 참조하지만 카탈로그에 없는 표를 EX_ 외부 노드로 넣을지.
+        # 이름만 있고 실체가 없는 노드가 화면을 채우므로 기본은 꺼둔다.
+        self.RECOMMENDER_DIAGRAM_INCLUDE_EXTERNAL = str(
+            self.getConf('recommender', 'diagram_include_external')
+            or 'false').lower() == 'true'
 
         """sync"""
         self.ESSYNC_BATCH_SIZE = int(self.getConf('elasticsearch.sync', 'sync_batch_size'))
