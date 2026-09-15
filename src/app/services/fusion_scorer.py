@@ -18,9 +18,15 @@ from functools import lru_cache
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 # ── 가중치 (검증셋으로 조정) ───────────────────────────────────────────
-W_VALUE_OVERLAP = 0.45   # 값 도메인 겹침
-W_CARDINALITY = 0.30     # PK-FK 패턴
-W_NAME = 0.25            # 컬럼명 근거 — 문자 유사도와 의미 유사도를 **묶은 하나**
+# 2026-09-15 조정: meta_id 류 UUID 고카디널리티
+# 키는 top-5 표본만으로 겹침을 못 잡아 _value_overlap() 이 항상 None 을 반환한다.
+# 그러면 W_VALUE_OVERLAP 전체가 통째로 빠져 사실상 이름 매칭만 남고 confidence
+# 상한이 sqrt(0.55)=0.742 로 묶인다. Phase 3(MinHash containment, docs §7)로
+# 근본 해결하기 전까지, 값 겹침 의존도를 낮추고 카디널리티·이름 비중을 올리는
+# 임시 완화 조치. (기존: 0.45 / 0.30 / 0.25)
+W_VALUE_OVERLAP = 0.25   # 값 도메인 겹침
+W_CARDINALITY = 0.40     # PK-FK 패턴
+W_NAME = 0.35            # 컬럼명 근거 — 문자 유사도와 의미 유사도를 **묶은 하나**
 
 # 문자 유사도와 의미 유사도를 별도 항목으로 두면 안 된다.
 # 같은 문자열에 대한 두 측정이라 독립 근거가 아니다. `구분 = 구분` 은 문자 1.0,
@@ -504,7 +510,7 @@ def _name_similarity(na: str, nb: str) -> float:
 @lru_cache(maxsize=1 << 18)
 def _name_similarity_cached(na: str, nb: str) -> float:
     matcher = SequenceMatcher(None, na, nb)
-    # 값싼 상한으로 먼저 탈락시킨다. 이름은 가중치 25% 항이라
+    # 값싼 상한으로 먼저 탈락시킨다. 이름은 가중치 W_NAME 항이라
     # 낮은 값의 정밀도는 결과 순위에 영향이 없다.
     if matcher.real_quick_ratio() < _NAME_CUTOFF:
         return 0.0
@@ -561,7 +567,8 @@ def score_column_pair(
         )
 
     # 희소도는 **컬럼의 성질**이지 이름 근거만의 성질이 아니다.
-    # 이름 점수(25%)에만 곱하면 흔한 컬럼이 값 겹침(45%)·카디널리티(30%)로 되살아난다.
+    # 이름 점수(W_NAME)에만 곱하면 흔한 컬럼이 값 겹침(W_VALUE_OVERLAP)·
+    # 카디널리티(W_CARDINALITY)로 되살아난다.
     # 실측(2026-08-06, .110): `경상북도_학교_현황` ↔ `국민건강보험공단_지사_현황` 이
     # `우편번호=우편번호` 값 겹침으로 0.890 을 받아 1순위에 올랐다. 우편번호는
     # 수백 개 표에 있는 속성이지 식별자가 아니다.
@@ -577,8 +584,8 @@ def score_column_pair(
     if _is_row_number_pair(a, b, rarity):
         return None
     # 피벗 축 컬럼(`2023년`, `4분기`)은 컬럼이 아니라 축이고 값은 측정값이다.
-    # 이름 유사도만 0 으로 두면 값 겹침(45%)·카디널리티(30%)로 되살아난다 —
-    # 실측에서 `2023년=2023년` 이 0.73 으로 남았다.
+    # 이름 유사도만 0 으로 두면 값 겹침(W_VALUE_OVERLAP)·카디널리티(W_CARDINALITY)로
+    # 되살아난다 — 실측(당시 가중치 0.45/0.30)에서 `2023년=2023년` 이 0.73 으로 남았다.
     if _is_pivot_name(a.norm_name) or _is_pivot_name(b.norm_name):
         return None
 
@@ -779,6 +786,10 @@ def recommend(
 
     results: List[Recommendation] = []
     for meta_id, cand in tables.items():
+        # 자기 자신은 후보에서 제외한다 — 제품 관점의 의도된 선택이다(2026-08-28).
+        # parent_id=id 류 재귀 조인은 스코어링상으로는 탐지 가능하지만(한때 허용해
+        # 봤었음, 자체검증 27/27 통과), "자기 자신과의 융합"은 사용자에게 실질적인
+        # 추천 가치가 없다고 판단해 되돌렸다. 아래 자체검증에서 이 배제를 지킨다.
         if meta_id == base.meta_id:
             continue
         rec = score_table_pair(base, cand, known_pairs, name_rarity=name_rarity,
@@ -952,11 +963,37 @@ def _self_test() -> int:
     name_only_a = ColumnProfile(column_name="자치구")
     name_only_b = ColumnProfile(column_name="자치구")
     d = score_column_pair(name_only_a, name_only_b, name_rarity={"자치구": 0.4})
+    total_w = W_NAME + W_VALUE_OVERLAP + W_CARDINALITY
     check("이름만 있는 쌍의 감쇄율은 희소도 그대로",
-          d and abs(d.confidence - 1.0 * (0.25 / 1.0) ** 0.5 * 0.4) < 1e-6,
+          d and abs(d.confidence - 1.0 * (W_NAME / total_w) ** 0.5 * 0.4) < 1e-6,
           "%.4f" % d.confidence if d else "")
 
-    total = 7 + 16
+    # ── 자기 참조(self-join) 배제는 의도된 제품 결정이다 (2026-08-28) ─────────
+    # parent_id=id 류 재귀 조인(조직도·카테고리 계층)은 스코어링 로직만 보면
+    # 탐지할 수 있다 — 실제로 한때 허용해 자체검증까지 통과시켜 봤다. 하지만
+    # "표가 자기 자신과 융합 가능하다"는 추천은 사용자 입장에서 실질적 가치가
+    # 없다고 판단해 되돌렸다(제품 관점). 이 배제가 나중에 실수로 풀리지 않도록
+    # 재귀 관계가 실제로 있는 표로도 확인해 둔다.
+    dept = TableProfile("E", "<table>", columns=[
+        _col("dept_id", is_unique=True, p_distinct=1.0, n_rows=50,
+             top_values=["1", "2", "3"]),
+        _col("parent_dept_id", p_distinct=0.3, n_rows=50,
+             top_values=["1", "2", "9"]),
+    ])
+    tables_with_dept = dict(tables)
+    tables_with_dept[dept.meta_id] = dept
+
+    dept_recs = recommend("E", tables_with_dept, top_n=10, min_score=0.0)
+    check("재귀 조인 관계가 있어도 자기 자신은 추천 후보에서 제외",
+          all(r.meta_id != "E" for r in dept_recs),
+          str([r.meta_id for r in dept_recs]))
+
+    # 재귀 관계가 없는 평범한 표도 당연히 자기 자신을 추천하지 않는다.
+    plain_self = next((r for r in recommend("A", tables, top_n=10, min_score=0.0)
+                       if r.meta_id == "A"), None)
+    check("재귀 관계 없는 표도 자기 자신을 추천하지 않음", plain_self is None)
+
+    total = 7 + 16 + 2
     print("\n%d/%d 통과" % (total - failed, total))
     return failed
 
