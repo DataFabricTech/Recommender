@@ -40,6 +40,12 @@ MIN_SCORE = 0.30         # 이 아래는 추천하지 않는다
 KEY_LIKE_P_DISTINCT = 0.95   # 이 이상이면 키 후보로 본다
 DUP_P_DISTINCT = 0.50        # 이 이하면 중복이 많은 컬럼
 
+# "1:N" 카디널리티의 최저 강도. many-side 의 p_distinct 가 KEY_LIKE_P_DISTINCT 에
+# 가까울수록(거의 유니크할수록) 1:1 과 구분이 흐려지는 약한 1:N 이므로 이 값까지
+# 낮아진다("1:N"이 항상 1.0 고정이라 서로 다른
+# 후보들이 완전히 같은 카디널리티 점수로 동점 처리되던 문제).
+CARD_1N_FLOOR = 0.6
+
 # 근사 중복 테이블 감점: 컬럼명이 이만큼 겹치면 "같은 테이블"에 가깝다
 REDUNDANT_OVERLAP = 0.80
 REDUNDANT_FLOOR = 0.50
@@ -341,7 +347,17 @@ def _cardinality(a: ColumnProfile, b: ColumnProfile) -> Tuple[str, Optional[floa
     if ka and kb:
         return "1:1", 0.9
     if ka or kb:
-        return "1:N", 1.0
+        # many-side(키가 아닌 쪽)의 p_distinct 가 낮을수록(반복이 많을수록) 진짜
+        # FK 라는 확신이 강하다. 고정값 1.0 이면 구조가 전혀 다른 후보들도 같은
+        # "1:N" 이기만 하면 점수가 완전히 같아진다(<view> 동점 사례).
+        many_side = b if ka else a
+        p = many_side.p_distinct
+        if p is None:
+            strength = 0.85   # 정보 없음 — 벌하지 않되 확실한 사례보다는 낮게
+        else:
+            ratio = min(max(p, 0.0), KEY_LIKE_P_DISTINCT) / KEY_LIKE_P_DISTINCT
+            strength = 1.0 - ratio * (1.0 - CARD_1N_FLOOR)
+        return "1:N", strength
     # 양쪽 다 중복이 많으면 조인 결과가 폭발한다
     pa, pb = a.p_distinct, b.p_distinct
     if pa is not None and pb is not None and pa <= DUP_P_DISTINCT and pb <= DUP_P_DISTINCT:
@@ -617,8 +633,12 @@ def score_column_pair(
 
     # 근거가 있는 항목만 쓰고 가중치를 재정규화한다.
     # 없는 값을 0 으로 두면 프로파일이 부실한 테이블이 부당하게 낮아진다.
-    # 문자·의미 중 큰 값 하나만 이름 근거로 쓴다
-    name_evidence = max(name_score, semantic_score or 0.0)
+    # 문자·의미 신호를 확률적 OR 로 합친다(둘 다 강하면 서로 보강, 어느 한쪽이
+    # 1.0 이면 그대로 1.0 — 정확 일치는 여전히 최대값). max() 만 쓰면 이름은
+    # 약한데 의미는 약간 더 강한 후보와, 이름·의미가 둘 다 적당히 강한 후보가
+    # 같은 값으로 뭉개져 구분이 안 됐다.
+    _sem = semantic_score or 0.0
+    name_evidence = name_score + _sem - name_score * _sem
 
     parts: List[Tuple[float, float]] = [(W_NAME, name_evidence)]
     if overlap is not None:
@@ -756,8 +776,14 @@ def score_table_pair(
 
     # 조인 가능한 컬럼이 여럿이면 융합 가치가 높다.
     # 자치구+종사자수로 이어지는 표가 종사자수 하나만 맞는 표보다 쓸모 있다.
+    # 보조 키 개수만 세면(계단함수) 문턱을 겨우 넘긴 키와 최고점에 근접한 키가
+    # 똑같이 취급돼, "보조키 2개 이상"이라는 사실만 같으면 배율도 같아져 버렸다
+    # best 대비 비율을 그대로 더해 연속값으로 만든다.
     extras = [c for c in ordered[1:] if c.confidence >= best.confidence * SECONDARY_RATIO]
-    bonus = 1.0 + SECONDARY_WEIGHT * min(len(extras), MAX_EXTRA_KEYS)
+    extra_strength = sum(
+        min(c.confidence / best.confidence, 1.0) for c in extras[:MAX_EXTRA_KEYS]
+    ) if best.confidence > 0 else 0.0
+    bonus = 1.0 + SECONDARY_WEIGHT * extra_strength
 
     score = min(1.0, best.confidence * bonus) * _redundancy_penalty(base, cand)
 
@@ -993,7 +1019,38 @@ def _self_test() -> int:
                        if r.meta_id == "A"), None)
     check("재귀 관계 없는 표도 자기 자신을 추천하지 않음", plain_self is None)
 
-    total = 7 + 16 + 2
+    # ── 우선순위2 회귀 방지 (2026-09-21, 점수 포화/동점) ──────────────────────
+    # <view> 에서 구조가 다른 후보 6개가 소수점 4자리까지 완전히
+    # 같은 점수(0.889944)를 받은 사례. "1:N" 카디널리티가 항상 1.0 고정이던 게
+    # 근본 원인이었다 — many-side 반복 정도가 달라도 점수가 똑같아졌다.
+    key_col = _col("dept_id", is_unique=True, p_distinct=1.0, n_rows=200,
+                   top_values=["1", "2", "3"])
+    many_tight = _col("dept_id", p_distinct=0.05, n_rows=200,
+                      top_values=["1", "2", "3"])
+    many_loose = _col("dept_id", p_distinct=0.90, n_rows=200,
+                      top_values=["1", "2", "3"])
+    tight = score_column_pair(key_col, many_tight)
+    loose = score_column_pair(key_col, many_loose)
+    check("1:N 카디널리티 연속성 — many-side 반복이 적을수록(강한 FK) confidence 높음",
+          tight is not None and loose is not None and tight.confidence > loose.confidence,
+          "tight=%.4f loose=%.4f" % (tight.confidence, loose.confidence)
+          if tight and loose else "")
+
+    class _FakeEmbeddings:
+        def similarity(self, _a, _b):
+            return 0.9
+
+    partial_a = _col("alarmType", p_distinct=0.3, n_rows=200, top_values=["a", "b", "c"])
+    partial_b = _col("alarmDefinition", p_distinct=0.3, n_rows=200, top_values=["a", "b", "c"])
+    without_sem = score_column_pair(partial_a, partial_b)
+    with_sem = score_column_pair(partial_a, partial_b, embeddings=_FakeEmbeddings())
+    check("이름·의미 신호를 확률적 OR로 결합 — 의미 근거가 더해지면 이름만 있을 때보다 강해짐",
+          without_sem is not None and with_sem is not None
+          and with_sem.confidence > without_sem.confidence,
+          "without=%.4f with=%.4f" % (without_sem.confidence, with_sem.confidence)
+          if without_sem and with_sem else "")
+
+    total = 7 + 16 + 2 + 2
     print("\n%d/%d 통과" % (total - failed, total))
     return failed
 
