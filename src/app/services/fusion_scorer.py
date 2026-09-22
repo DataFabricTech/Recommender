@@ -71,6 +71,14 @@ MIN_OVERLAP_SUPPORT = 3
 # 5행짜리 표는 어느 컬럼이든 고유하다.
 MIN_ROWS_FOR_CARDINALITY = 30
 
+# is_unique 는 표본 전수를 실제로 관찰한 사실이라 p_distinct 비율 추정보다
+# 신뢰도가 높다 — role/status/type 같은 정상적인 소규모 코드테이블(예: 10행짜리
+# role_id PK)까지 위 30행 기준에 걸려 카디널리티 근거를 통째로 잃는 문제를 막는다.
+# 실측(2026-09-22): `<table>.menu_role → <table>.role_id`(role_id n_rows=10,
+# is_unique=True) — top_value 4/5 일치로 값 겹침은 잡히는데 카디널리티가 "unknown"
+# 이 되어 top-20 밖으로 밀려남. 그래도 극소표(<10행)의 우연한 고유성은 배제한다.
+MIN_ROWS_FOR_UNIQUE_KEY = 10
+
 # 흔한 컬럼명은 변별력이 없다. '구분', '번호', '합계' 는 수백 개 표에 나오며
 # 이름이 같다는 사실만으로는 조인 근거가 되지 않는다.
 # 불용어를 손으로 나열하는 대신 카탈로그 안의 출현 빈도로 판단한다(IDF).
@@ -331,10 +339,12 @@ def _key_like(col: ColumnProfile) -> Optional[bool]:
     행이 얼마 없으면 고유성은 우연이다 — 5행짜리 표에서는 인구수도 고유하다.
     그런 표본으로 PK-FK 를 추정하면 측정값 컬럼이 키로 둔갑한다.
     """
+    if col.is_unique:
+        if col.n_rows is not None and col.n_rows < MIN_ROWS_FOR_UNIQUE_KEY:
+            return None
+        return True
     if col.n_rows is not None and col.n_rows < MIN_ROWS_FOR_CARDINALITY:
         return None
-    if col.is_unique:
-        return True
     if col.p_distinct is not None:
         return col.p_distinct >= KEY_LIKE_P_DISTINCT
     return None
@@ -1050,7 +1060,31 @@ def _self_test() -> int:
           "without=%.4f with=%.4f" % (without_sem.confidence, with_sem.confidence)
           if without_sem and with_sem else "")
 
-    total = 7 + 16 + 2 + 2
+    # ── 우선순위4 회귀 방지 (2026-09-22, 소규모 코드테이블 카디널리티 소실) ────
+    # `<table>.menu_role → <table>.role_id` 실측: role_id 는 10행짜리 코드
+    # 테이블의 PK(is_unique=True)인데 MIN_ROWS_FOR_CARDINALITY(30) 에 걸려
+    # `_cardinality()` 가 "unknown" 을 반환 — 값이 4/5 겹치는데도 카디널리티
+    # 근거(40%)가 통째로 빠져 top-20 밖으로 밀려났다.
+    role_id = _col("role_id", is_unique=True, p_distinct=1.0, n_rows=10,
+                   top_values=["ROLE_TEST", "ROLE_USER", "ROLE_ADMIN",
+                               "ROLE_MASTER", "ROLE_MANAGER"])
+    menu_role = _col("menu_role", p_distinct=0.014, n_rows=347,
+                     top_values=["TEST", "ROLE_TEST", "ROLE_USER",
+                                 "ROLE_ADMIN", "ROLE_MANAGER"])
+    role_pair = score_column_pair(role_id, menu_role)
+    check("10행 코드테이블 PK도 1:N 카디널리티 근거로 인정",
+          role_pair is not None and role_pair.cardinality == "1:N",
+          "card=%s conf=%.3f" % (role_pair.cardinality, role_pair.confidence)
+          if role_pair else "None")
+
+    # 극소표(3행)의 우연한 고유성은 여전히 배제한다 — 원래 가드의 취지 유지.
+    tiny_unique = _col("population", is_unique=True, p_distinct=1.0, n_rows=3,
+                       top_values=["10", "20", "30"])
+    tiny_card, _tiny_score = _cardinality(tiny_unique, menu_role)
+    check("3행짜리 우연한 고유값은 여전히 카디널리티 근거로 인정 안 함",
+          tiny_card == "unknown", "card=%s" % tiny_card)
+
+    total = 7 + 16 + 2 + 2 + 2
     print("\n%d/%d 통과" % (total - failed, total))
     return failed
 
