@@ -112,7 +112,7 @@ curl "http://localhost:8080/api/recommend/clustering?target_id=<데이터 ID>"
 | 카테고리 그래프 | 데이터를 주제별로 묶고 카테고리 사이의 연결 강도를 산출합니다 | `app/services/category_graph_builder.py` |
 | 표준 용어 매핑 | 컬럼명을 토큰화해 표준 단어·용어·도메인 규칙과 대조합니다. 규칙으로 판정하지 못하면 퍼지 매칭으로 후보를 제시하고, 자료형이 표준 도메인에 맞는지 확인합니다 | `standard_mapping/` |
 
-클러스터링과 임베딩 추천의 알고리즘 선택 근거는 [docs/](docs/)에 정리되어 있습니다.
+알고리즘별 상세는 [docs/](docs/)에 정리되어 있습니다.
 
 ## 설정
 
