@@ -6,7 +6,7 @@
 """
 import collections
 
-from StandardMapping.service.tokenizer import tokenize
+from standard_mapping.service.tokenizer import tokenize
 
 
 class TermRecommender:

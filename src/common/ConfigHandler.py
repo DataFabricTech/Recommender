@@ -1,7 +1,7 @@
 import os
 import configparser
 from pathlib import Path
-from Lib.CryptHandler import *
+from common.CryptHandler import *
 
 class ConfigHandler:    
     

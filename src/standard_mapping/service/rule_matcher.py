@@ -8,8 +8,8 @@
       (단어는 도메인 분류명에 여러 길이가 매핑되므로 길이는 검사하지 않음)
  3) NAME_MISMATCH: 위 둘 다 실패 → 추천 용어 제시
 """
-from StandardMapping.service.tokenizer import tokenize
-from StandardMapping.service.type_normalizer import type_matches, type_check
+from standard_mapping.service.tokenizer import tokenize
+from standard_mapping.service.type_normalizer import type_matches, type_check
 
 RULE_TERM = "RULE_TERM"
 RULE_WORD = "RULE_WORD"
