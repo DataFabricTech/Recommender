@@ -14,3 +14,7 @@ SQLAlchemy~=2.0.32
 wheel~=0.44.0
 psycopg2-binary~=2.9.9
 psycopg2~=2.9.9
+scipy~=1.14.0
+sentence-transformers~=3.0.1
+cryptography~=43.0.0
+sentry-sdk~=2.13.0
