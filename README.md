@@ -1,4 +1,4 @@
-# Open VDAP Recommender
+# Open VDAP Relate
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
@@ -6,7 +6,7 @@
 
 ## 개요
 
-데이터패브릭 기술을 적용한 서비스 명칭은 **Open VDAP**이며, 본 저장소는 Open VDAP을 구성하는 요소 중 **recommender**입니다.
+데이터패브릭 기술을 적용한 서비스 명칭은 **Open VDAP**이며, 본 저장소는 Open VDAP을 구성하는 요소 중 **Relate**입니다.
 
 수집된 데이터 사이의 **유사성과 결합 가능성**을 판정합니다. 데이터 ID를 입력하면 관련 데이터를 추천하고, 서로 다른 데이터의 속성이 같은 의미인지, 조인이 가능한지를 산출합니다. 데이터 카탈로그에서 연관 데이터 탐색과 논리적 데이터 통합의 근거로 사용됩니다.
 
